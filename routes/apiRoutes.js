@@ -12,12 +12,20 @@ function cScore(data)
 {
 	return new Promise((resolve,reject) => {
 	var score = 0;
-	for(var i = 0; i< data.lenght; i++)
+	for(var i = 0; i< data.length; i++)
 	{
+		console.log(data[i]);
 		score = parseInt(data[i]) + parseInt(score);
 	}
+	console.log(score);
 	resolve(score);
 })
+}
+
+async function gScore(score)
+{
+	const rslt =  await cScore(score);
+	return rslt;
 }
 
 module.exports = function(app) {
@@ -43,41 +51,37 @@ module.exports = function(app) {
 	}
 	else if(friendData.length >1)
 	{
-		friendData.push(req.body);
-		cScore(req.body.scores).then((result) => {
-			yScore = result;
+		var cData = req.body;
+		
+		console.log("Input Scores");
+		console.log(req.body.scores);
+		var rslt = false
+		friendData.forEach((itm) => {
+			const testItem = async item => {
+				var yScore = await gScore(cData.scores);
+				var fScore = await gScore(itm.scores);
+				var compare = Math.abs(yScore - fScore);
+				if(compare <= 5)
+				{
+					console.log(itm);
+					if(rslt === false)
+					{
+						res.json(itm);
+						rslt = true;
+					}
+				}
+			};
+			testItem(itm);
+			
 		});
-		console.log(yScore);
-		for(var i = 0; i < friendData.length; i++)
-		{
-			var fScore;
-			cScore(friendData[i].scores).then((result) => {
-				fScore = result;
-			});
-			console.log(fScore);
-			var compare = parseInt(yScore) - parseInt(fScore);
-			console.log(compare);
-			if(compare <= 5){
-				res.json(friendData[i]);
-			}
-		}
+		friendData.push(cData);
+		
 	}
 	else
 	{
-		friendDat.push(req.body);
+		friendData.push(req.body);
 		res.json(friendData[0]);
 	}
 	
-  });
-
-  // ---------------------------------------------------------------------------
-  // I added this below code so you could clear out the table while working with the functionality.
-  // Don"t worry about it!
-
-  app.post("/api/clear", function() {
-    // Empty out the arrays of data
-    friendData = [];
-
-    console.log(friendData);
   });
 };
